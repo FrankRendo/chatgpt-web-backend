@@ -1,0 +1,23 @@
+{
+  "name": "chatgpt-web-backend",
+  "version": "1.0.0",
+  "description": "Interfaz web segura para consultar a ChatGPT con backend en Node.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "chatgpt",
+    "openai",
+    "express",
+    "node"
+  ],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.2",
+    "node-fetch": "^2.7.0"
+  }
+}

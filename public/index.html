@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ChatGPT Seguro</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f2f2f2;
+    }
+    #chatBox {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    #messages {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #fafafa;
+    }
+    #userInput {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    #imageInput {
+      display: block;
+      margin-bottom: 10px;
+    }
+    #sendBtn {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    img.uploaded {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chatBox">
+    <h2>ChatGPT Seguro</h2>
+    <div id="messages"></div>
+    <form id="chatForm">
+      <input type="text" id="userInput" placeholder="Escribí tu mensaje...">
+      <input type="file" id="imageInput" accept="image/*">
+      <button type="submit" id="sendBtn">Enviar</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('chatForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const input = document.getElementById('userInput');
+      const imageInput = document.getElementById('imageInput');
+      const userText = input.value.trim();
+      const imageFile = imageInput.files[0];
+
+      if (!userText && !imageFile) return;
+
+      const messagesDiv = document.getElementById('messages');
+
+      if (userText) {
+        messagesDiv.innerHTML += `<div><strong>Yo:</strong> ${userText}</div>`;
+      }
+
+      if (imageFile) {
+        const imgURL = URL.createObjectURL(imageFile);
+        messagesDiv.innerHTML += `<div><strong>Yo:</strong><br><img src="${imgURL}" class="uploaded"></div>`;
+      }
+
+      const formData = new FormData();
+      formData.append('message', userText);
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
+      input.value = '';
+      imageInput.value = '';
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      const botReply = data.reply;
+      messagesDiv.innerHTML += `<div><strong>ChatGPT:</strong> ${botReply}</div>`;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+  </script>
+</body>
+</html>
