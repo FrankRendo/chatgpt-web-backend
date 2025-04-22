@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>ChatGPT Tres Mares</title>
+  <title>ChatGPT Seguro</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -10,7 +11,7 @@
       background: #f2f2f2;
     }
     #chatBox {
-      max-width: 600px;
+      max-width: 700px;
       margin: auto;
       background: white;
       padding: 20px;
@@ -25,8 +26,8 @@
       margin-bottom: 10px;
       background: #fafafa;
     }
-    #userInput {
-      width: 100%;
+    #userInput, #urlInput {
+      width: 48%;
       padding: 12px;
       margin-bottom: 10px;
       font-size: 16px;
@@ -44,14 +45,25 @@
       margin-top: 10px;
       border-radius: 6px;
     }
+    .input-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 2%;
+    }
+    #messages div {
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
   <div id="chatBox">
-    <h2>ChatGPT Tres Mares</h2>
+    <h2>ChatGPT Seguro</h2>
     <div id="messages"></div>
     <form id="chatForm">
-      <input type="text" id="userInput" placeholder="Escribí tu mensaje...">
+      <div class="input-row">
+        <input type="text" id="userInput" placeholder="Escribí tu mensaje...">
+        <input type="text" id="urlInput" placeholder="(Opcional) Enlace a analizar">
+      </div>
       <input type="file" id="imageInput" accept="image/*">
       <button type="submit" id="sendBtn">Enviar</button>
     </form>
@@ -60,13 +72,13 @@
   <script>
     document.getElementById('chatForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+
       const input = document.getElementById('userInput');
+      const urlInput = document.getElementById('urlInput');
       const imageInput = document.getElementById('imageInput');
       const userText = input.value.trim();
+      const externalURL = urlInput.value.trim();
       const imageFile = imageInput.files[0];
-
-      if (!userText && !imageFile) return;
-
       const messagesDiv = document.getElementById('messages');
 
       if (userText) {
@@ -78,25 +90,36 @@
         messagesDiv.innerHTML += `<div><strong>Yo:</strong><br><img src="${imgURL}" class="uploaded"></div>`;
       }
 
-      const formData = new FormData();
-      formData.append('message', userText);
-      if (imageFile) {
-        formData.append('image', imageFile);
+      if (externalURL) {
+        messagesDiv.innerHTML += `<div><strong>Yo:</strong> Analizar el contenido de: <a href="${externalURL}" target="_blank">${externalURL}</a></div>`;
       }
 
       input.value = '';
+      urlInput.value = '';
       imageInput.value = '';
 
-      const res = await fetch('/api/chat', {
+      const formData = new FormData();
+      formData.append('message', userText);
+      if (imageFile) formData.append('image', imageFile);
+      if (externalURL) formData.append('url', externalURL);
+
+      const endpoint = externalURL ? '/api/analizar-url' : '/api/chat';
+
+      const res = await fetch(endpoint, {
         method: 'POST',
         body: formData
       });
 
       const data = await res.json();
-      const botReply = data.reply;
-      messagesDiv.innerHTML += `<div><strong>ChatGPT:</strong> ${botReply}</div>`;
+      
+      const chatDiv = document.createElement('div');
+      chatDiv.innerHTML = `<strong>ChatGPT:</strong><br>${marked.parse(data.reply)}`;
+      messagesDiv.appendChild(chatDiv);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
   </script>
 </body>
 </html>
+
+
+
