@@ -13,7 +13,7 @@ const PORT = 3000;
 const upload = multer({ dest: 'uploads/' });
 
 app.use(bodyParser.json());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Función para borrar archivo de forma segura
 function safeUnlink(filePath) {
@@ -87,7 +87,8 @@ app.post('/api/chat', upload.single('image'), async (req, res) => {
     res.status(500).json({ reply: 'Ocurrió un error procesando tu solicitud.' });
   }
 });
-
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
 });
