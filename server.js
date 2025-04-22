@@ -7,24 +7,20 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Configuración de multer para recibir archivos
 const upload = multer({ dest: 'uploads/' });
 
-app.use(bodyParser.json());
+// ✅ Servir archivos estáticos desde carpeta "public"
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Función para borrar archivo de forma segura
-function safeUnlink(filePath) {
-  try {
-    if (filePath && fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-  } catch (err) {
-    console.warn('No se pudo eliminar el archivo:', err.message);
-  }
-}
+app.use(bodyParser.json());
+
+// ✅ Ruta explícita para servir index.html desde carpeta "public"
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 app.post('/api/chat', upload.single('image'), async (req, res) => {
   const userMessage = req.body.message || '';
@@ -53,6 +49,8 @@ app.post('/api/chat', upload.single('image'), async (req, res) => {
           }
         ]
       });
+
+      fs.unlinkSync(imageFile.path); // ✅ Borra el archivo temporal
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -70,9 +68,6 @@ app.post('/api/chat', upload.single('image'), async (req, res) => {
 
     const data = await response.json();
 
-    // Siempre borrar archivo si fue subido
-    safeUnlink(imageFile?.path);
-
     if (data.error) {
       console.error('Respuesta inesperada de la API:', data);
       return res.status(500).json({ reply: 'Error en la respuesta de ChatGPT.' });
@@ -83,12 +78,10 @@ app.post('/api/chat', upload.single('image'), async (req, res) => {
 
   } catch (error) {
     console.error('Error:', error);
-    safeUnlink(imageFile?.path);
     res.status(500).json({ reply: 'Ocurrió un error procesando tu solicitud.' });
   }
 });
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
 });
