@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>ChatGPT Seguro</title>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -25,12 +24,14 @@
       padding: 10px;
       margin-bottom: 10px;
       background: #fafafa;
+      font-size: 15px;
     }
-    #userInput, #urlInput {
-      width: 48%;
+    #userInput {
+      width: 100%;
       padding: 12px;
       margin-bottom: 10px;
       font-size: 16px;
+      box-sizing: border-box;
     }
     #imageInput {
       display: block;
@@ -45,14 +46,6 @@
       margin-top: 10px;
       border-radius: 6px;
     }
-    .input-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 2%;
-    }
-    #messages div {
-      margin-bottom: 15px;
-    }
   </style>
 </head>
 <body>
@@ -60,66 +53,62 @@
     <h2>ChatGPT Seguro</h2>
     <div id="messages"></div>
     <form id="chatForm">
-      <div class="input-row">
-        <input type="text" id="userInput" placeholder="Escribí tu mensaje...">
-        <input type="text" id="urlInput" placeholder="(Opcional) Enlace a analizar">
-      </div>
+      <input type="text" id="userInput" placeholder="Escribí tu mensaje o pegá un enlace...">
       <input type="file" id="imageInput" accept="image/*">
       <button type="submit" id="sendBtn">Enviar</button>
     </form>
   </div>
 
   <script>
-    document.getElementById('chatForm').addEventListener('submit', async function(e) {
+    document.getElementById('chatForm').addEventListener('submit', async function (e) {
       e.preventDefault();
 
       const input = document.getElementById('userInput');
-      const urlInput = document.getElementById('urlInput');
       const imageInput = document.getElementById('imageInput');
       const userText = input.value.trim();
-      const externalURL = urlInput.value.trim();
       const imageFile = imageInput.files[0];
       const messagesDiv = document.getElementById('messages');
 
+      if (!userText && !imageFile) return;
+
+      // Mostrar mensaje del usuario
       if (userText) {
-        messagesDiv.innerHTML += `<div><strong>Yo:</strong> ${userText}</div>`;
+        const msgWithLinks = userText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+        messagesDiv.innerHTML += `<div><strong>Yo:</strong> ${msgWithLinks}</div>`;
       }
 
+      // Mostrar imagen cargada
       if (imageFile) {
         const imgURL = URL.createObjectURL(imageFile);
         messagesDiv.innerHTML += `<div><strong>Yo:</strong><br><img src="${imgURL}" class="uploaded"></div>`;
       }
 
-      if (externalURL) {
-        messagesDiv.innerHTML += `<div><strong>Yo:</strong> Analizar el contenido de: <a href="${externalURL}" target="_blank">${externalURL}</a></div>`;
-      }
-
       input.value = '';
-      urlInput.value = '';
       imageInput.value = '';
 
       const formData = new FormData();
       formData.append('message', userText);
       if (imageFile) formData.append('image', imageFile);
-      if (externalURL) formData.append('url', externalURL);
 
-      const endpoint = externalURL ? '/api/analizar-url' : '/api/chat';
-
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/chat', {
         method: 'POST',
         body: formData
       });
 
       const data = await res.json();
-      
-      const chatDiv = document.createElement('div');
-      chatDiv.innerHTML = `<strong>ChatGPT:</strong><br>${marked.parse(data.reply)}`;
-      messagesDiv.appendChild(chatDiv);
+      messagesDiv.innerHTML += `<div><strong>ChatGPT:</strong> ${data.reply}</div>`;
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 
